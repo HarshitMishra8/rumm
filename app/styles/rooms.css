@@ -1,0 +1,60 @@
+/* ---------------------------------------------------------- rooms index */
+
+.rooms-index {
+  margin-top: clamp(72px, 10vw, 128px);
+}
+.rooms-index ul {
+  list-style: none;
+  margin: 20px 0 0;
+  padding: 0;
+  border-top: 1.5px solid var(--spruce);
+}
+.room-row {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1.1fr) minmax(0, 1.4fr) auto;
+  gap: 8px 28px;
+  align-items: center;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line);
+  text-decoration: none;
+}
+.room-thumb {
+  width: 84px;
+  height: 63px;
+  border-radius: 12px;
+  background: var(--mist);
+  overflow: hidden;
+  transition: background-color 0.3s;
+}
+.room-thumb svg {
+  transition: transform 0.5s var(--ease-spring);
+}
+.room-name {
+  font-size: clamp(1.5rem, 3vw, 2.3rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  transition: transform 0.4s var(--ease-out);
+}
+.room-line {
+  color: var(--muted);
+  font-size: var(--t-sm);
+}
+.room-from {
+  font-size: var(--t-sm);
+  color: var(--muted);
+  text-align: right;
+  white-space: nowrap;
+}
+.room-from strong {
+  color: var(--spruce);
+}
+.room-row:hover .room-thumb {
+  background: var(--paper);
+}
+.room-row:hover .room-thumb svg {
+  transform: scale(1.12) translateY(-3px);
+}
+.room-row:hover .room-name {
+  transform: translateX(6px);
+}
