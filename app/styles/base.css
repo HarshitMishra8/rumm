@@ -1,0 +1,122 @@
+/* ==========================================================================
+   Rumm — design tokens
+   Cool Nordic daylight, spruce ink, lingonberry for prices.
+   ========================================================================== */
+:root {
+  --frost: #e8eceb;
+  --paper: #f6f7f4;
+  --mist: #dbe2e0;
+  --line: #c4cfcb;
+  --spruce: #15302a;
+  --muted: #4c605a;
+  --pine: #24594b;
+  --pine-hi: #1b4639;
+  --lingon: #b8293a;
+  --sun: #f2c14e;
+
+  --font-sans: "Familjen Grotesk", "Archivo", "Helvetica Neue", Arial, sans-serif;
+
+  /* type scale, 1.25 from 17px */
+  --t-xs: 0.8125rem;
+  --t-sm: 0.9375rem;
+  --t-md: 1.0625rem;
+  --t-lg: 1.3125rem;
+  --t-xl: 1.625rem;
+  --t-2xl: 2.0625rem;
+  --t-3xl: clamp(2.1rem, 3.6vw, 2.75rem);
+  --t-display: clamp(2.4rem, 4.8vw, 4.25rem);
+
+  --gutter: clamp(16px, 4vw, 48px);
+  --max: 1320px;
+
+  --r-scene: 28px;
+  --r-panel: 18px;
+  --r-field: 10px;
+
+  --ease-out: cubic-bezier(0.2, 0.7, 0.3, 1);
+  --ease-spring: cubic-bezier(0.3, 1.45, 0.5, 1);
+  --ease-drawer: cubic-bezier(0.22, 0.9, 0.28, 1);
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-padding-top: 140px;
+}
+
+body {
+  margin: 0;
+  background: var(--frost);
+  color: var(--spruce);
+  font-family: var(--font-sans);
+  font-size: var(--t-md);
+  line-height: 1.5;
+  font-feature-settings: "ss01", "tnum" 0;
+  -webkit-font-smoothing: antialiased;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+:focus-visible {
+  outline: 3px solid var(--sun);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.skip {
+  position: absolute;
+  left: 12px;
+  top: -60px;
+  z-index: 200;
+  background: var(--spruce);
+  color: var(--paper);
+  padding: 10px 14px;
+  border-radius: 8px;
+  text-decoration: none;
+}
+.skip:focus {
+  top: 12px;
+}
+
+main {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 0 var(--gutter) 96px;
+  min-height: 60vh;
+}
