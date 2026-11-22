@@ -1,0 +1,62 @@
+/* ---------------------------------------------------------------- type */
+
+.display {
+  font-size: var(--t-display);
+  font-weight: 700;
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+  max-width: 17ch;
+  text-wrap: balance;
+}
+
+.page-title {
+  font-size: var(--t-3xl);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  text-wrap: balance;
+}
+
+.section-title {
+  font-size: var(--t-xl);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+.lede {
+  font-size: var(--t-lg);
+  line-height: 1.45;
+  color: var(--muted);
+  max-width: 38ch;
+  text-wrap: pretty;
+}
+
+.price {
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.price-sale {
+  color: var(--lingon);
+}
+.price-md {
+  font-size: var(--t-xl);
+}
+.price-xl {
+  font-size: clamp(2.4rem, 4.4vw, 3.4rem);
+  line-height: 1;
+}
+
+.text-link {
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 4px;
+  text-decoration-color: color-mix(in srgb, currentColor 35%, transparent);
+  transition: text-decoration-color 0.2s;
+}
+.text-link:hover {
+  text-decoration-color: currentColor;
+}
