@@ -1,0 +1,42 @@
+/* ------------------------------------------------------------------ how */
+
+.how {
+  margin-top: clamp(72px, 10vw, 128px);
+  padding: clamp(28px, 5vw, 56px);
+  border-radius: var(--r-scene);
+  background: var(--spruce);
+  color: var(--frost);
+}
+.how ol {
+  list-style: none;
+  counter-reset: step;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 32px;
+  margin: 32px 0 0;
+  padding: 0;
+}
+.how li {
+  counter-increment: step;
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  padding-top: 20px;
+  border-top: 1px solid color-mix(in srgb, var(--frost) 30%, transparent);
+}
+.how li::before {
+  content: counter(step);
+  font-size: var(--t-2xl);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--sun);
+}
+.how h3 {
+  font-size: var(--t-lg);
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+.how p {
+  color: color-mix(in srgb, var(--frost) 78%, transparent);
+  max-width: 34ch;
+}
