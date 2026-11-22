@@ -1,0 +1,97 @@
+/* ---------------------------------------------------------------- order */
+
+.order-page {
+  padding-top: clamp(36px, 6vw, 72px);
+}
+.order-hero {
+  display: grid;
+  gap: 16px;
+  max-width: 760px;
+}
+.order-tick {
+  width: 64px;
+  height: 64px;
+  color: var(--pine);
+}
+.order-tick circle {
+  stroke-dasharray: 190;
+  animation: draw 0.7s var(--ease-out) both;
+}
+.order-tick path {
+  stroke-dasharray: 50;
+  animation: draw 0.45s var(--ease-out) 0.55s both;
+}
+@keyframes draw {
+  from {
+    stroke-dashoffset: 190;
+  }
+}
+.tracker {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  margin: 40px 0;
+  padding: 0;
+}
+.tracker li {
+  position: relative;
+  padding-top: 26px;
+  font-size: var(--t-sm);
+  color: var(--muted);
+}
+.tracker li::before {
+  content: "";
+  position: absolute;
+  top: 6px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--mist);
+}
+.tracker li::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--mist);
+}
+.tracker li[data-done] {
+  color: var(--spruce);
+  font-weight: 700;
+}
+.tracker li[data-done]::after {
+  background: var(--pine);
+  box-shadow: 0 0 0 5px color-mix(in srgb, var(--pine) 20%, transparent);
+}
+.order-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  gap: 48px;
+}
+.order-lines {
+  list-style: none;
+  margin: 16px 0 0;
+  padding: 0;
+}
+.order-lines li {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line);
+}
+.order-lines small {
+  display: block;
+  color: var(--muted);
+}
+.order-sums {
+  border-top: 0;
+}
+.order-addr address {
+  margin: 16px 0 24px;
+  font-style: normal;
+  line-height: 1.6;
+}
