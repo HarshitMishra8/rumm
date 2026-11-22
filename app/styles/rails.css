@@ -1,0 +1,26 @@
+/* ---------------------------------------------------------------- rails */
+
+.rail-section {
+  margin-top: clamp(64px, 9vw, 112px);
+}
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+}
+.rail {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: clamp(220px, 23%, 290px);
+  gap: 20px;
+  margin: 20px calc(var(--gutter) * -1) 0;
+  padding: 4px var(--gutter) 16px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-padding: 0 var(--gutter);
+  scrollbar-width: thin;
+}
+.rail > * {
+  scroll-snap-align: start;
+}
