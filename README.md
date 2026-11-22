@@ -1,5 +1,7 @@
 # Rumm
 
+![Rumm home page](public/screenshot.png)
+
 A full-stack furniture store built with Next.js 15 (App Router), React 19 and TypeScript. It has no other runtime dependencies.
 
 ## Run it
