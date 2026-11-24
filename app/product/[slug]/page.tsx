@@ -7,6 +7,8 @@ import { ROOMS, getProduct } from "@/data/products";
 import { related } from "@/lib/catalog";
 import { getStockMap } from "@/lib/store";
 
+export const dynamic = "force-dynamic"; // stock is read live from the database
+
 type Params = Promise<{ slug: string }>;
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
