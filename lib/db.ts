@@ -69,11 +69,8 @@ export async function read<T>(fn: (db: DB) => T): Promise<T> {
   return fn(await load());
 }
 
-export class StoreError extends Error {
-  constructor(message: string, public status = 400) {
-    super(message);
-  }
-}
+export { StoreError } from "@/lib/errors";
+import { StoreError } from "@/lib/errors";
 
 
 export function getStockMap(): Promise<Record<string, number>> {
