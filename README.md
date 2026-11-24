@@ -2,16 +2,20 @@
 
 ![Rumm home page](public/screenshot.png)
 
-A full-stack furniture store built with Next.js 15 (App Router), React 19 and TypeScript. It has no other runtime dependencies.
+A full-stack furniture store built with Next.js 15 (App Router), React 19 and TypeScript, with MongoDB through Mongoose.
 
 ## Run it
 
+You need a MongoDB database. A free [MongoDB Atlas](https://www.mongodb.com/atlas) cluster works well.
+
 ```bash
 npm install
-npm run dev        # http://localhost:3000
+cp .env.example .env.local    # paste your Atlas connection string into .env.local
+npm run db:seed               # adds stock for every product and builds the indexes
+npm run dev                   # http://localhost:3000
 ```
 
-Data is stored in `.data/db.json`, which is created on the first write. Run `npm run reset-db` to start fresh.
+`npm run db:seed` never resets stock that already exists, so it's safe to run again after adding products.
 
 ## What's in it
 
@@ -37,7 +41,10 @@ Data is stored in `.data/db.json`, which is created on the first write. Run `npm
 
 - Passwords are hashed with scrypt and compared in constant time. Sessions use random 256-bit tokens in httpOnly cookies.
 - Guests can check out. An order page is visible only to the account that placed it, or to the browser that placed it.
-- All data access goes through `lib/store.ts`. Writes are serialised and atomic. To move to Postgres or Prisma, replace that one file.
+- Data lives in MongoDB. Mongoose models are in `models/`; routes import from `lib/store.ts`, which re-exports the users, cart and orders modules.
+- Placing an order runs in a MongoDB transaction. Stock is taken with a conditional update, so two customers can never both buy the last one.
+- Bag updates check the document version, so two quick taps on "Add" both count.
+- Sessions and abandoned bags expire on their own through TTL indexes.
 
 ## Design notes
 
@@ -46,8 +53,15 @@ Data is stored in `.data/db.json`, which is created on the first write. Run `npm
 - **Illustrations:** every product is drawn in SVG (`components/ProductArt.tsx`) so colourways really recolour it. To use photos, add an `image` field to the products and render it in place of `ProductArt`.
 - **Motion:** one orchestrated moment on load (the room assembling). Everything else responds to the user: hotspots, the fly-to-bag arc, the drawer, swatches, accordions and toasts. It all switches off under `prefers-reduced-motion`.
 
-## Going to production
+## Deploying to Vercel
 
-- Replace the JSON store with a real database. Serverless hosts such as Vercel have no persistent disk.
-- Add a payment gateway (e.g. Razorpay) if you want prepaid orders.
+1. In Atlas, open **Network Access** and allow `0.0.0.0/0` (Vercel's servers don't have fixed addresses).
+2. Import the GitHub repo in Vercel and add `MONGODB_URI` under **Settings → Environment Variables**.
+3. Deploy, then run `npm run db:seed` once from your machine if the database is new.
+
+Transactions need a replica set. Atlas clusters (including the free one) are replica sets; a plain local `mongod` is not.
+
+## Next steps
+
+- Add a payment gateway (e.g. Razorpay) for prepaid orders.
 - Send confirmation emails from `POST /api/orders`.
