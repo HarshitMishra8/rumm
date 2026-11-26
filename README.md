@@ -56,6 +56,21 @@ Put your email in `ADMIN_EMAILS` in `.env.local` (comma-separate several), creat
 
 Customers who open `/admin` get a 404, and the admin API answers 403.
 
+## Online payments (Razorpay)
+
+Add `RAZORPAY_KEY_ID` and `RAZORPAY_KEY_SECRET` to `.env.local` (test keys from Razorpay's Test Mode) and checkout offers **Pay online now** alongside cash and UPI on delivery. Without the keys, online payment simply isn't shown.
+
+How an online order flows:
+
+1. Placing the order takes the stock and saves the order as *waiting for payment*. The bag is kept.
+2. The server creates a Razorpay order for the exact total, and the browser opens Razorpay Checkout (UPI, cards, netbanking, wallets).
+3. On success, `POST /api/payments/verify` checks Razorpay's signature (HMAC of `order_id|payment_id` with the key secret) before marking the order paid. Only then is the bag emptied.
+4. If the customer closes Checkout, `POST /api/payments/cancel` asks Razorpay whether anything was paid; if not, the order is cancelled and the stock goes back on sale.
+5. Orders left unpaid for 30 minutes are checked with Razorpay and released the same way.
+6. `POST /api/payments/webhook` (events `payment.captured`, `order.paid`) catches payments where the customer closed the tab. It verifies `X-Razorpay-Signature` over the raw body, checks the amount, and is safe to receive more than once. A payment that lands after its order was released puts the order back and takes the stock again.
+
+In Test Mode, pay with UPI ID `success@razorpay` or Razorpay's test cards. Unpaid online orders can't be moved to *packed* in the admin panel.
+
 ## Design notes
 
 - **Type:** Familjen Grotesk, loaded with `next/font`.
@@ -66,12 +81,12 @@ Customers who open `/admin` get a 404, and the admin API answers 403.
 ## Deploying to Vercel
 
 1. In Atlas, open **Network Access** and allow `0.0.0.0/0` (Vercel's servers don't have fixed addresses).
-2. Import the GitHub repo in Vercel and add `MONGODB_URI` and `ADMIN_EMAILS` under **Settings → Environment Variables**.
-3. Deploy, then run `npm run db:seed` once from your machine if the database is new.
+2. Import the GitHub repo in Vercel and add `MONGODB_URI`, `ADMIN_EMAILS` and the three `RAZORPAY_*` values under **Settings → Environment Variables**.
+3. In Razorpay → Settings → Webhooks, add `https://<your-site>/api/payments/webhook` with the events `payment.captured` and `order.paid`, and the same secret as `RAZORPAY_WEBHOOK_SECRET`.
+4. Deploy, then run `npm run db:seed` once from your machine if the database is new.
 
 Transactions need a replica set. Atlas clusters (including the free one) are replica sets; a plain local `mongod` is not.
 
 ## Next steps
 
-- Add a payment gateway (e.g. Razorpay) for prepaid orders.
 - Send confirmation emails from `POST /api/orders`.
