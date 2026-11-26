@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { ordersForUser, placeOrder } from "@/lib/store";
 import { releaseStalePayments, startOnlinePayment } from "@/lib/payments";
+import { notifyOrderPlaced } from "@/lib/notifications";
 import { cartId, currentUser, errorResponse, readJson, rememberOrder } from "@/lib/session";
 import type { Address, DeliveryOption, PaymentOption } from "@/lib/types";
 
@@ -43,6 +44,7 @@ export async function POST(req: Request) {
       const checkout = await startOnlinePayment(order);
       return NextResponse.json({ order, checkout }, { status: 201 });
     }
+    await notifyOrderPlaced(order);
     return NextResponse.json({ order }, { status: 201 });
   } catch (err) {
     return errorResponse(err);

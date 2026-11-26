@@ -14,6 +14,7 @@ import mongoose from "mongoose";
 import { connectDB } from "@/lib/mongodb";
 import { StoreError } from "@/lib/errors";
 import { toOrder } from "@/lib/orders";
+import { notifyOrderPlaced } from "@/lib/notifications";
 import {
   createRazorpayOrder,
   fetchOrderPayments,
@@ -75,6 +76,7 @@ async function cancelPending(orderId: string): Promise<boolean> {
  */
 async function markPaid(doc: OrderDoc, paymentId: string): Promise<void> {
   if (doc.paymentStatus === "paid") return;
+  let changed = false;
 
   if (doc.status === "cancelled") {
     const session = await mongoose.startSession();
@@ -85,21 +87,29 @@ async function markPaid(doc: OrderDoc, paymentId: string): Promise<void> {
           { $set: { status: "placed", paymentStatus: "paid", razorpayPaymentId: paymentId, paidAt: new Date() } },
           { session },
         );
+        changed = false;
         if (res.modifiedCount === 0) return;
         for (const l of doc.lines) {
           await Inventory.updateOne({ _id: l.productId }, { $inc: { stock: -l.qty } }, { session });
         }
+        changed = true;
       });
     } finally {
       await session.endSession();
     }
   } else {
-    await OrderModel.updateOne(
+    const res = await OrderModel.updateOne(
       { _id: doc._id, paymentStatus: { $ne: "paid" } },
       { $set: { paymentStatus: "paid", razorpayPaymentId: paymentId, paidAt: new Date() } },
     );
+    changed = res.modifiedCount === 1;
   }
   if (doc.cartId) await Cart.deleteOne({ _id: doc.cartId });
+  // the confirmation email goes out once, by whichever path recorded the payment first
+  if (changed) {
+    const fresh = await load(doc._id);
+    if (fresh) await notifyOrderPlaced(toOrder(fresh));
+  }
 }
 
 /** Asks Razorpay whether the order was paid. Marks it paid if so. */

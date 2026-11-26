@@ -7,6 +7,8 @@ import { Inventory, type InventoryDoc } from "@/models/Inventory";
 import { Order as OrderModel, type OrderDoc } from "@/models/Order";
 import type { ProductInput } from "@/lib/productInput";
 import { releaseStalePayments } from "@/lib/payments";
+import { notifyStatusChange } from "@/lib/notifications";
+import { toOrder } from "@/lib/orders";
 import type { Order, Product } from "@/lib/types";
 
 export type AdminProduct = Product & { active: boolean; sortOrder: number };
@@ -92,6 +94,10 @@ export async function setOrderStatus(id: string, status: string): Promise<Order[
   if (doc.status === "cancelled") throw new StoreError("This order was cancelled, so its status can't change.", 409);
   if (doc.paymentStatus === "pending") throw new StoreError("This order hasn't been paid yet. Wait for the payment before packing it.", 409);
   await OrderModel.updateOne({ _id: id }, { $set: { status } });
+  if (doc.status !== status) {
+    const fresh = await OrderModel.findById(id).lean<OrderDoc>();
+    if (fresh) await notifyStatusChange(toOrder(fresh));
+  }
   return status as OrderStatus;
 }
 
