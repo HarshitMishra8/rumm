@@ -5,6 +5,7 @@
 import { connectDB } from "@/lib/mongodb";
 import { Product as ProductModel, type ProductDoc } from "@/models/Product";
 import { Inventory, type InventoryDoc } from "@/models/Inventory";
+import { ratingsByProduct } from "@/lib/reviews";
 import type { Product } from "@/lib/types";
 
 export function toProduct(doc: ProductDoc, stock: number): Product {
@@ -39,11 +40,16 @@ async function stockMap(): Promise<Map<string, number>> {
 /** Products shown in the shop, in their display order. */
 export async function listProducts(): Promise<Product[]> {
   await connectDB();
-  const [docs, stock] = await Promise.all([
+  const [docs, stock, ratings] = await Promise.all([
     ProductModel.find({ active: true }).sort({ sortOrder: 1, createdAt: 1 }).lean<ProductDoc[]>(),
     stockMap(),
+    ratingsByProduct(),
   ]);
-  return docs.map((d) => toProduct(d, stock.get(d._id) ?? 0));
+  return docs.map((d) => withRating(toProduct(d, stock.get(d._id) ?? 0), ratings.get(d._id)));
+}
+
+function withRating(p: Product, r: { avg: number; count: number } | undefined): Product {
+  return r ? { ...p, rating: r } : p;
 }
 
 /** Every product including hidden ones, for the admin panel. */
@@ -60,8 +66,8 @@ export async function getProductBySlug(slug: string): Promise<Product | null> {
   await connectDB();
   const doc = await ProductModel.findOne({ slug, active: true }).lean<ProductDoc>();
   if (!doc) return null;
-  const inv = await Inventory.findById(doc._id).lean<InventoryDoc>();
-  return toProduct(doc, inv?.stock ?? 0);
+  const [inv, ratings] = await Promise.all([Inventory.findById(doc._id).lean<InventoryDoc>(), ratingsByProduct()]);
+  return withRating(toProduct(doc, inv?.stock ?? 0), ratings.get(doc._id));
 }
 
 /** Active products by id, for joining bag lines with catalogue data. */

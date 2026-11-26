@@ -46,6 +46,8 @@ export interface Product {
   pieces: number; // parts in the flat pack
   assemblyMinutes: number;
   stock: number;
+  /** average of visible reviews; absent when there are none */
+  rating?: { avg: number; count: number };
 }
 
 export interface CartLine {
