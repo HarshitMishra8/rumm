@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import { connectDB } from "@/lib/mongodb";
 import { StoreError, isDuplicateKey } from "@/lib/errors";
 import { view } from "@/lib/cart";
+import { productMap } from "@/lib/products";
 import { EMAIL_RE, type PublicUser } from "@/lib/users";
 import { assemblyFee, deliveryDate, deliveryFee } from "@/lib/pricing";
 import { Cart, type CartDoc } from "@/models/Cart";
@@ -77,6 +78,7 @@ export async function placeOrder(input: {
   if (!cartId) throw new StoreError("Your bag is empty.", 409);
 
   await connectDB();
+  const products = await productMap();
 
   // One retry in the very unlikely case two orders draw the same id.
   for (let attempt = 0; attempt < 2; attempt++) {
@@ -88,7 +90,7 @@ export async function placeOrder(input: {
         const cart = await Cart.findById(cartId).session(session).lean<CartDoc>();
         const lines = (cart?.lines ?? []).map((l) => ({ productId: l.productId, colorwayId: l.colorwayId, qty: l.qty }));
         if (lines.length === 0) throw new StoreError("Your bag is empty.", 409);
-        const v = view(lines);
+        const v = view(lines, products);
 
         // Take the stock. The $gte condition means two customers can't both
         // buy the last one: the second update matches nothing.
