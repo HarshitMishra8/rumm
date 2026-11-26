@@ -2,13 +2,18 @@ import Link from "next/link";
 import { RoomScene } from "@/components/RoomScene";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductArt } from "@/components/ProductArt";
-import { PRODUCTS, ROOMS, SHOWROOM_IDS, getProduct } from "@/data/products";
+import { ROOMS, SHOWROOM_IDS } from "@/data/products";
+import { listProducts } from "@/lib/products";
 import { formatINR } from "@/lib/pricing";
 import type { Product } from "@/lib/types";
 
-export default function HomePage() {
-  const showroom = SHOWROOM_IDS.map((id) => getProduct(id)).filter(Boolean) as Product[];
-  const small = PRODUCTS.filter((p) => p.price < 4000).sort((a, b) => a.price - b.price);
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  const products = await listProducts();
+  const byId = new Map(products.map((p) => [p.id, p]));
+  const showroom = SHOWROOM_IDS.map((id) => byId.get(id)).filter(Boolean) as Product[];
+  const small = products.filter((p) => p.price < 4000).sort((a, b) => a.price - b.price);
 
   return (
     <>
@@ -20,7 +25,8 @@ export default function HomePage() {
         </h2>
         <ul>
           {ROOMS.map((r) => {
-            const items = PRODUCTS.filter((p) => p.room === r.id);
+            const items = products.filter((p) => p.room === r.id);
+            if (items.length === 0) return null;
             const from = Math.min(...items.map((p) => p.price));
             const hero = items[0];
             return (
