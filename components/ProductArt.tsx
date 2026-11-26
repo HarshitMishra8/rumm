@@ -47,6 +47,9 @@ const VIEW: Record<ArtKind, string> = {
   basket: "0 0 400 300",
 };
 
+/** Every illustration the admin can choose for a product. */
+export const ART_KINDS = Object.keys(VIEW) as ArtKind[];
+
 export function ProductArt({ kind, color, wood, className, title, bare, x, y, width, height }: Props) {
   const c = color;
   const dark = shade(c, -0.18);
