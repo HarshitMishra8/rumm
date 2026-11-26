@@ -1,3 +1,7 @@
+/**
+ * Rooms are fixed and live here. PRODUCTS is the starter catalogue: `npm run db:seed`
+ * copies it into MongoDB, and from then on products are managed in /admin.
+ */
 import type { Product, Room } from "@/lib/types";
 
 export const ROOMS: { id: Room; name: string; line: string }[] = [
