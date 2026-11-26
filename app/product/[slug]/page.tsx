@@ -3,26 +3,26 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductDetail } from "@/components/ProductDetail";
-import { ROOMS, getProduct } from "@/data/products";
+import { ROOMS } from "@/data/products";
 import { related } from "@/lib/catalog";
-import { getStockMap } from "@/lib/store";
+import { getProductBySlug, listProducts } from "@/lib/products";
 
-export const dynamic = "force-dynamic"; // stock is read live from the database
+export const dynamic = "force-dynamic"; // product and stock are read live from the database
 
 type Params = Promise<{ slug: string }>;
 
 export async function generateMetadata({ params }: { params: Params }): Promise<Metadata> {
-  const p = getProduct((await params).slug);
+  const p = await getProductBySlug((await params).slug);
   return p ? { title: `${p.name} ${p.type.toLowerCase()}`, description: p.blurb } : {};
 }
 
 export default async function ProductPage({ params, searchParams }: { params: Params; searchParams: Promise<{ c?: string }> }) {
   const { slug } = await params;
   const { c } = await searchParams;
-  const product = getProduct(slug);
+  const [product, all] = await Promise.all([getProductBySlug(slug), listProducts()]);
   if (!product) notFound();
-  const stock = (await getStockMap())[product.id] ?? product.stock;
-  const room = ROOMS.find((r) => r.id === product.room)!;
+  const stock = product.stock;
+  const room = ROOMS.find((r) => r.id === product.room) ?? ROOMS[0];
 
   return (
     <div className="product-page">
@@ -38,7 +38,7 @@ export default async function ProductPage({ params, searchParams }: { params: Pa
           Goes well with
         </h2>
         <div className="rail">
-          {related(product).map((p) => (
+          {related(product, all).map((p) => (
             <ProductCard key={p.id} product={p} size="sm" />
           ))}
         </div>

@@ -5,6 +5,9 @@ import { ProductCard } from "@/components/ProductCard";
 import { ShopFilters } from "@/components/ShopFilters";
 import { ROOMS } from "@/data/products";
 import { filterProducts } from "@/lib/catalog";
+import { listProducts } from "@/lib/products";
+
+export const dynamic = "force-dynamic";
 
 type SP = Promise<{ room?: string; max?: string; sort?: string; q?: string }>;
 
@@ -17,7 +20,7 @@ export async function generateMetadata({ searchParams }: { searchParams: SP }): 
 export default async function ShopPage({ searchParams }: { searchParams: SP }) {
   const sp = await searchParams;
   const room = ROOMS.find((r) => r.id === sp.room);
-  const products = filterProducts(sp);
+  const products = filterProducts(await listProducts(), sp);
   const title = sp.q ? `Results for “${sp.q}”` : room ? room.name : "Everything";
 
   return (
