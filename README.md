@@ -77,6 +77,16 @@ In Test Mode, pay with UPI ID `success@razorpay` or Razorpay's test cards. Unpai
 - **Reviews:** only customers with a **delivered** order containing the product can review it, one review each (writing again edits it). Product pages show the average, a breakdown by stars and the reviews; cards show the average. Admins can hide a review at `/admin/reviews`, which also removes it from the average.
 - **Emails** (through [Resend](https://resend.com)): order placed (for online payments, once the payment is confirmed), on the way, and delivered. Set `RESEND_API_KEY`; without it, emails are skipped and logged in the terminal. With the test sender `onboarding@resend.dev`, Resend only delivers to your own Resend account's email; verify a domain and change `EMAIL_FROM` to email real customers. A failed email never stops an order.
 
+## Shopping assistant (Gemini)
+
+Set `GEMINI_API_KEY` (free from [Google AI Studio](https://aistudio.google.com/apikey)) and an **Ask Rumm** button appears on every page.
+
+- It answers from the store's own data through five tools: `search_products`, `get_product_details`, `add_to_bag`, `view_bag` and `get_my_orders`. Gemini chooses the tool; the server runs it against MongoDB and sends the result back, so prices, stock and order details are never made up.
+- It can suggest products within a budget, add them to the bag in the right colour, and tell signed-in customers (or guests, for orders placed in this browser) where their order is. It can't place orders or take payment.
+- Replies link to product pages, and recommended products appear as small cards with an Add button.
+- `POST /api/chat` takes the last 20 messages (1,000 characters each) and allows 15 messages a minute per visitor.
+- The model defaults to `gemini-flash-latest`; set `GEMINI_MODEL` to pin another.
+
 ## Design notes
 
 - **Type:** Familjen Grotesk, loaded with `next/font`.
@@ -87,7 +97,7 @@ In Test Mode, pay with UPI ID `success@razorpay` or Razorpay's test cards. Unpai
 ## Deploying to Vercel
 
 1. In Atlas, open **Network Access** and allow `0.0.0.0/0` (Vercel's servers don't have fixed addresses).
-2. Import the GitHub repo in Vercel and add `MONGODB_URI`, `ADMIN_EMAILS` and the three `RAZORPAY_*` values under **Settings → Environment Variables**.
+2. Import the GitHub repo in Vercel and add `MONGODB_URI`, `ADMIN_EMAILS`, the three `RAZORPAY_*` values, `RESEND_API_KEY`, `EMAIL_FROM`, `SITE_URL` and `GEMINI_API_KEY` under **Settings → Environment Variables**.
 3. In Razorpay → Settings → Webhooks, add `https://<your-site>/api/payments/webhook` with the events `payment.captured` and `order.paid`, and the same secret as `RAZORPAY_WEBHOOK_SECRET`.
 4. Deploy, then run `npm run db:seed` once from your machine if the database is new.
 
@@ -95,4 +105,4 @@ Transactions need a replica set. Atlas clusters (including the free one) are rep
 
 ## Next steps
 
-- Send confirmation emails from `POST /api/orders`.
+- Verify a domain in Resend so emails reach every customer.
