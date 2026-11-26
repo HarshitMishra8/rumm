@@ -4,6 +4,8 @@ import { Suspense } from "react";
 import { CartProvider } from "@/components/CartProvider";
 import { Header } from "@/components/Header";
 import { WishlistProvider } from "@/components/WishlistProvider";
+import { ChatWidget } from "@/components/ChatWidget";
+import { geminiEnabled } from "@/lib/gemini";
 import { currentUser } from "@/lib/session";
 import { isAdmin } from "@/lib/admin";
 import { Footer } from "@/components/Footer";
@@ -30,6 +32,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             </Suspense>
             <main id="main">{children}</main>
             <Footer />
+            {geminiEnabled() && <ChatWidget />}
           </WishlistProvider>
         </CartProvider>
       </body>
