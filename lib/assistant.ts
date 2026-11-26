@@ -271,12 +271,15 @@ export async function runAssistant(messages: ChatMessage[], ctx: AssistantContex
   }));
   const state: ToolState = { products: [], cartChanged: false };
   const system = systemPrompt(ctx.user);
+  let model: string | undefined;
 
   for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
     let content: GeminiContent | null;
     const started = Date.now();
     try {
-      content = await generate({ system, contents, functions: round < MAX_TOOL_ROUNDS ? FUNCTIONS : [] });
+      const out = await generate({ system, contents, functions: round < MAX_TOOL_ROUNDS ? FUNCTIONS : [] }, model);
+      content = out.content;
+      model = out.model; // stay on the model that answered for the rest of this reply
     } catch (err) {
       console.error(`[chat] round ${round + 1} failed after ${((Date.now() - started) / 1000).toFixed(1)}s:`, (err as Error).message);
       const slow = err instanceof GeminiError && /didn't answer/.test(err.message);
@@ -295,7 +298,7 @@ export async function runAssistant(messages: ChatMessage[], ctx: AssistantContex
 
     const called = (content?.parts ?? []).filter((p) => p.functionCall).map((p) => p.functionCall!.name);
     console.info(
-      `[chat] round ${round + 1}: Gemini took ${((Date.now() - started) / 1000).toFixed(1)}s${called.length ? `, asked for ${called.join(", ")}` : ", replied"}`,
+      `[chat] round ${round + 1}: ${model} took ${((Date.now() - started) / 1000).toFixed(1)}s${called.length ? `, asked for ${called.join(", ")}` : ", replied"}`,
     );
     const calls = content.parts.filter((p): p is GeminiPart & { functionCall: NonNullable<GeminiPart["functionCall"]> } => !!p.functionCall);
     if (calls.length === 0) {
