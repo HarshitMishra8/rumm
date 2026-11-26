@@ -17,7 +17,7 @@ export default async function OrderPage({ params }: { params: Promise<{ id: stri
   const [order, user, recent] = await Promise.all([getOrder(id), currentUser(), recentOrderIds()]);
   // only the customer who placed it (signed in, or on this browser) or an admin can see an order
   if (!order || !((user && order.userId === user.id) || recent.includes(order.id) || isAdmin(user))) notFound();
-  const stepIndex = STEPS.indexOf(order.status);
+  const stepIndex = STEPS.indexOf(order.status as (typeof STEPS)[number]);
 
   return (
     <div className="order-page">

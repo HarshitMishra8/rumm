@@ -5,6 +5,7 @@ import { StoreError, isDuplicateKey } from "@/lib/errors";
 import { view } from "@/lib/cart";
 import { productMap } from "@/lib/products";
 import { EMAIL_RE, type PublicUser } from "@/lib/users";
+import { razorpayEnabled } from "@/lib/razorpay";
 import { assemblyFee, deliveryDate, deliveryFee } from "@/lib/pricing";
 import { Cart, type CartDoc } from "@/models/Cart";
 import { Inventory, type InventoryDoc } from "@/models/Inventory";
@@ -33,7 +34,7 @@ function validateAddress(a: Partial<Address> | undefined): Address {
 }
 
 /** MongoDB document → the Order shape the pages already use. */
-function toOrder(doc: OrderDoc): Order {
+export function toOrder(doc: OrderDoc): Order {
   return {
     id: doc._id,
     userId: doc.userId ? String(doc.userId) : null,
@@ -53,6 +54,7 @@ function toOrder(doc: OrderDoc): Order {
     },
     deliveryOption: doc.deliveryOption,
     payment: doc.payment,
+    paymentStatus: doc.paymentStatus ?? "not_required", // orders from before online payments
     status: doc.status,
     createdAt: new Date(doc.createdAt).toISOString(),
     deliverBy: new Date(doc.deliverBy).toISOString(),
@@ -73,7 +75,9 @@ export async function placeOrder(input: {
   const email = (input.user?.email ?? input.email ?? "").trim().toLowerCase();
   if (!EMAIL_RE.test(email)) throw new StoreError("Enter an email address for your order confirmation.");
   const deliveryOption: DeliveryOption = input.deliveryOption === "assembly" ? "assembly" : "standard";
-  const payment: PaymentOption = input.payment === "upi-on-delivery" ? "upi-on-delivery" : "cod";
+  const payment: PaymentOption = input.payment === "upi-on-delivery" || input.payment === "online" ? input.payment : "cod";
+  const online = payment === "online";
+  if (online && !razorpayEnabled()) throw new StoreError("Online payment isn't set up yet. Choose cash or UPI on delivery.", 409);
   const cartId = input.cartId;
   if (!cartId) throw new StoreError("Your bag is empty.", 409);
 
@@ -131,13 +135,17 @@ export async function placeOrder(input: {
               address,
               deliveryOption,
               payment,
+              paymentStatus: online ? "pending" : "not_required",
+              cartId: online ? cartId : null,
               deliverBy: deliveryDate(now, deliveryOption === "assembly" ? 4 : 3),
             },
           ],
           { session },
         );
 
-        await Cart.deleteOne({ _id: cartId }, { session });
+        // Pay-on-delivery orders are done now. Online orders keep the bag until
+        // the payment is confirmed, so a cancelled payment loses nothing.
+        if (!online) await Cart.deleteOne({ _id: cartId }, { session });
         placed = created.toObject() as OrderDoc;
       });
     } catch (err) {

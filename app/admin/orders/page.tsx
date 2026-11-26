@@ -79,7 +79,7 @@ export default async function AdminOrders({ searchParams }: { searchParams: Prom
                     <small className="cell-sub">{o.payment === "cod" ? "Cash" : "UPI"} on delivery</small>
                   </td>
                   <td>
-                    <OrderStatusSelect orderId={o.id} status={o.status} />
+                    <OrderStatusSelect orderId={o.id} status={o.status as (typeof ORDER_STATUSES)[number]} />
                   </td>
                 </tr>
               ))}

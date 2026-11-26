@@ -1,5 +1,5 @@
 import mongoose, { Schema, type Model, type Types } from "mongoose";
-import type { Address, DeliveryOption, OrderLine, PaymentOption } from "@/lib/types";
+import type { Address, DeliveryOption, OrderLine, PaymentOption, PaymentStatus } from "@/lib/types";
 
 export interface OrderDoc {
   _id: string; // e.g. "RM-2026-482913"
@@ -13,7 +13,13 @@ export interface OrderDoc {
   address: Address;
   deliveryOption: DeliveryOption;
   payment: PaymentOption;
-  status: "placed" | "packed" | "shipped" | "delivered";
+  paymentStatus: PaymentStatus;
+  razorpayOrderId?: string | null;
+  razorpayPaymentId?: string | null;
+  paidAt?: Date | null;
+  /** online orders remember their bag so it can be emptied once payment lands */
+  cartId?: string | null;
+  status: "placed" | "packed" | "shipped" | "delivered" | "cancelled";
   deliverBy: Date;
   createdAt: Date;
   updatedAt: Date;
@@ -54,8 +60,13 @@ const orderSchema = new Schema<OrderDoc>(
     total: { type: Number, required: true },
     address: { type: addressSchema, required: true },
     deliveryOption: { type: String, enum: ["standard", "assembly"], required: true },
-    payment: { type: String, enum: ["cod", "upi-on-delivery"], required: true },
-    status: { type: String, enum: ["placed", "packed", "shipped", "delivered"], default: "placed" },
+    payment: { type: String, enum: ["cod", "upi-on-delivery", "online"], required: true },
+    paymentStatus: { type: String, enum: ["not_required", "pending", "paid", "failed"], default: "not_required", index: true },
+    razorpayOrderId: { type: String, default: null, index: true },
+    razorpayPaymentId: { type: String, default: null },
+    paidAt: { type: Date, default: null },
+    cartId: { type: String, default: null },
+    status: { type: String, enum: ["placed", "packed", "shipped", "delivered", "cancelled"], default: "placed" },
     deliverBy: { type: Date, required: true },
   },
   { timestamps: true },

@@ -86,7 +86,8 @@ export interface Address {
 }
 
 export type DeliveryOption = "standard" | "assembly";
-export type PaymentOption = "cod" | "upi-on-delivery";
+export type PaymentOption = "cod" | "upi-on-delivery" | "online";
+export type PaymentStatus = "not_required" | "pending" | "paid" | "failed";
 
 export interface Order {
   id: string;
@@ -100,7 +101,9 @@ export interface Order {
   address: Address;
   deliveryOption: DeliveryOption;
   payment: PaymentOption;
-  status: "placed" | "packed" | "shipped" | "delivered";
+  /** only online orders move through pending → paid (or failed) */
+  paymentStatus: PaymentStatus;
+  status: "placed" | "packed" | "shipped" | "delivered" | "cancelled";
   createdAt: string;
   deliverBy: string;
 }
