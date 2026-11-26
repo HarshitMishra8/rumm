@@ -71,6 +71,12 @@ How an online order flows:
 
 In Test Mode, pay with UPI ID `success@razorpay` or Razorpay's test cards. Unpaid online orders can't be moved to *packed* in the admin panel.
 
+## Saved items, reviews and emails
+
+- **Saved items:** signed-in customers tap the heart on any product to keep it at `/saved` (the heart in the header shows how many). Guests are asked to sign in. `GET/POST/DELETE /api/wishlist`.
+- **Reviews:** only customers with a **delivered** order containing the product can review it, one review each (writing again edits it). Product pages show the average, a breakdown by stars and the reviews; cards show the average. Admins can hide a review at `/admin/reviews`, which also removes it from the average.
+- **Emails** (through [Resend](https://resend.com)): order placed (for online payments, once the payment is confirmed), on the way, and delivered. Set `RESEND_API_KEY`; without it, emails are skipped and logged in the terminal. With the test sender `onboarding@resend.dev`, Resend only delivers to your own Resend account's email; verify a domain and change `EMAIL_FROM` to email real customers. A failed email never stops an order.
+
 ## Design notes
 
 - **Type:** Familjen Grotesk, loaded with `next/font`.
