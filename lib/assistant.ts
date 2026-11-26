@@ -192,10 +192,12 @@ const orderBrief = (o: Order) => ({
 interface ToolState {
   products: ChatProduct[];
   cartChanged: boolean;
+  /** the catalogue, loaded once per message */
+  catalogue?: Product[];
 }
 
 async function runTool(name: string, args: Record<string, unknown>, ctx: AssistantContext, state: ToolState) {
-  const products = await listProducts();
+  const products = (state.catalogue ??= await listProducts());
   const find = (id: unknown) => products.find((p) => p.id === id || p.slug === id);
 
   switch (name) {
@@ -272,19 +274,29 @@ export async function runAssistant(messages: ChatMessage[], ctx: AssistantContex
 
   for (let round = 0; round <= MAX_TOOL_ROUNDS; round++) {
     let content: GeminiContent | null;
+    const started = Date.now();
     try {
       content = await generate({ system, contents, functions: round < MAX_TOOL_ROUNDS ? FUNCTIONS : [] });
     } catch (err) {
-      console.error(err);
+      console.error(`[chat] round ${round + 1} failed after ${((Date.now() - started) / 1000).toFixed(1)}s:`, (err as Error).message);
+      const slow = err instanceof GeminiError && /didn't answer/.test(err.message);
       throw new StoreError(
-        err instanceof GeminiError ? "The assistant isn't available right now. Try again in a minute." : "Something went wrong.",
-        502,
+        slow
+          ? "The assistant is taking too long right now. Try again in a moment."
+          : err instanceof GeminiError
+            ? "The assistant isn't available right now. Try again in a minute."
+            : "Something went wrong.",
+        slow ? 504 : 502,
       );
     }
     if (!content || !content.parts?.length) {
       return { reply: "I can't help with that one. Ask me about furniture, your bag or your orders.", products: [], cartChanged: state.cartChanged };
     }
 
+    const called = (content?.parts ?? []).filter((p) => p.functionCall).map((p) => p.functionCall!.name);
+    console.info(
+      `[chat] round ${round + 1}: Gemini took ${((Date.now() - started) / 1000).toFixed(1)}s${called.length ? `, asked for ${called.join(", ")}` : ", replied"}`,
+    );
     const calls = content.parts.filter((p): p is GeminiPart & { functionCall: NonNullable<GeminiPart["functionCall"]> } => !!p.functionCall);
     if (calls.length === 0) {
       const reply = content.parts
