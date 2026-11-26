@@ -34,7 +34,12 @@ export default async function AccountPage() {
           <h1 className="page-title">Hello, {user.name.split(" ")[0]}</h1>
           <p className="shop-sub">{user.email}</p>
         </div>
-        <SignOutButton />
+        <div className="account-actions">
+          <Link href="/saved" className="btn btn-quiet">
+            Saved items
+          </Link>
+          <SignOutButton />
+        </div>
       </header>
 
       <h2 className="section-title">Your orders</h2>
