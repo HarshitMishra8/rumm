@@ -163,7 +163,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         {toast && (
           <div className="toast" key={toast.id}>
             {toast.message}
-            {toast.message.startsWith("Added") || toast.message.includes("added") ? (
+            {/^(Added|\d+ items added) to your bag$/.test(toast.message) ? (
               <button type="button" onClick={() => setOpen(true)}>
                 View bag
               </button>
