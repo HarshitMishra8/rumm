@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CheckoutForm } from "@/components/CheckoutForm";
 import { currentUser } from "@/lib/session";
+import { razorpayEnabled } from "@/lib/razorpay";
 
 export const metadata: Metadata = { title: "Checkout" };
 export const dynamic = "force-dynamic";
@@ -16,7 +17,7 @@ export default async function CheckoutPage() {
           Checking out as a guest. <Link href="/account?next=/checkout">Sign in</Link> to keep your orders in one place.
         </p>
       )}
-      <CheckoutForm email={user?.email ?? null} />
+      <CheckoutForm email={user?.email ?? null} onlineEnabled={razorpayEnabled()} />
     </div>
   );
 }
