@@ -12,13 +12,23 @@ const TABS = [
   { v: "packed", label: "Packed" },
   { v: "shipped", label: "On the way" },
   { v: "delivered", label: "Delivered" },
+  { v: "cancelled", label: "Cancelled" },
 ];
+
+function paymentNote(o: { payment: string; paymentStatus: string }) {
+  if (o.payment === "online") {
+    if (o.paymentStatus === "paid") return "Paid online";
+    if (o.paymentStatus === "pending") return "Waiting for payment";
+    return "Not paid";
+  }
+  return `${o.payment === "cod" ? "Cash" : "UPI"} on delivery`;
+}
 
 const day = (iso: string) => new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
 
 export default async function AdminOrders({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
   const { status } = await searchParams;
-  const current = ORDER_STATUSES.includes(status as (typeof ORDER_STATUSES)[number]) ? status! : "";
+  const current = ([...ORDER_STATUSES, "cancelled"] as string[]).includes(status ?? "") ? status! : "";
   const orders = await listOrders(current || undefined);
 
   return (
@@ -76,10 +86,20 @@ export default async function AdminOrders({ searchParams }: { searchParams: Prom
                   <td className="hide-sm">{day(o.deliverBy)}</td>
                   <td className="num">
                     {formatINR(o.total)}
-                    <small className="cell-sub">{o.payment === "cod" ? "Cash" : "UPI"} on delivery</small>
+                    <small className="cell-sub">{paymentNote(o)}</small>
                   </td>
                   <td>
-                    <OrderStatusSelect orderId={o.id} status={o.status as (typeof ORDER_STATUSES)[number]} />
+                    {o.status === "cancelled" ? (
+                      <span className="status-pill" data-status="cancelled">
+                        Cancelled
+                      </span>
+                    ) : o.paymentStatus === "pending" ? (
+                      <span className="status-pill" data-status="pending">
+                        Awaiting payment
+                      </span>
+                    ) : (
+                      <OrderStatusSelect orderId={o.id} status={o.status} />
+                    )}
                   </td>
                 </tr>
               ))}

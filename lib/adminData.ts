@@ -6,6 +6,7 @@ import { Product as ProductModel, type ProductDoc } from "@/models/Product";
 import { Inventory, type InventoryDoc } from "@/models/Inventory";
 import { Order as OrderModel, type OrderDoc } from "@/models/Order";
 import type { ProductInput } from "@/lib/productInput";
+import { releaseStalePayments } from "@/lib/payments";
 import type { Order, Product } from "@/lib/types";
 
 export type AdminProduct = Product & { active: boolean; sortOrder: number };
@@ -65,6 +66,7 @@ function summary(o: OrderDoc) {
     items: o.lines.reduce((n, l) => n + l.qty, 0),
     total: o.total,
     payment: o.payment,
+    paymentStatus: o.paymentStatus ?? "not_required",
     status: o.status,
     createdAt: new Date(o.createdAt).toISOString(),
     deliverBy: new Date(o.deliverBy).toISOString(),
@@ -72,9 +74,12 @@ function summary(o: OrderDoc) {
 }
 export type OrderSummary = ReturnType<typeof summary>;
 
+const LISTABLE: string[] = [...ORDER_STATUSES, "cancelled"];
+
 export async function listOrders(status?: string, limit = 200): Promise<OrderSummary[]> {
   await connectDB();
-  const filter = ORDER_STATUSES.includes(status as OrderStatus) ? { status } : {};
+  await releaseStalePayments().catch((err) => console.error(err));
+  const filter = LISTABLE.includes(status ?? "") ? { status } : {};
   const docs = await OrderModel.find(filter).sort({ createdAt: -1 }).limit(limit).lean<OrderDoc[]>();
   return docs.map(summary);
 }
@@ -82,8 +87,11 @@ export async function listOrders(status?: string, limit = 200): Promise<OrderSum
 export async function setOrderStatus(id: string, status: string): Promise<Order["status"]> {
   if (!ORDER_STATUSES.includes(status as OrderStatus)) throw new StoreError("Choose a status from the list.");
   await connectDB();
-  const res = await OrderModel.updateOne({ _id: id }, { $set: { status } });
-  if (res.matchedCount === 0) throw new StoreError("That order doesn't exist.", 404);
+  const doc = await OrderModel.findById(id).lean<OrderDoc>();
+  if (!doc) throw new StoreError("That order doesn't exist.", 404);
+  if (doc.status === "cancelled") throw new StoreError("This order was cancelled, so its status can't change.", 409);
+  if (doc.paymentStatus === "pending") throw new StoreError("This order hasn't been paid yet. Wait for the payment before packing it.", 409);
+  await OrderModel.updateOne({ _id: id }, { $set: { status } });
   return status as OrderStatus;
 }
 
@@ -91,10 +99,12 @@ export async function setOrderStatus(id: string, status: string): Promise<Order[
 
 export async function overview() {
   await connectDB();
+  await releaseStalePayments().catch((err) => console.error(err));
   const since = new Date(Date.now() - 7 * 864e5);
   const [recent, open, stockRows, products] = await Promise.all([
-    OrderModel.find({ createdAt: { $gte: since } }).lean<OrderDoc[]>(),
-    OrderModel.find({ status: { $in: ["placed", "packed"] } }).lean<OrderDoc[]>(),
+    // count only orders that are going ahead: not cancelled, not waiting for payment
+    OrderModel.find({ createdAt: { $gte: since }, status: { $ne: "cancelled" }, paymentStatus: { $ne: "pending" } }).lean<OrderDoc[]>(),
+    OrderModel.find({ status: { $in: ["placed", "packed"] }, paymentStatus: { $ne: "pending" } }).lean<OrderDoc[]>(),
     Inventory.find().lean<InventoryDoc[]>(),
     ProductModel.find({ active: true }).lean<ProductDoc[]>(),
   ]);

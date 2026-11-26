@@ -245,6 +245,24 @@
 .status-select[data-status="delivered"] {
   background-color: color-mix(in srgb, var(--pine) 22%, var(--paper));
 }
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-size: var(--t-sm);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.status-pill[data-status="cancelled"] {
+  background: color-mix(in srgb, var(--lingon) 12%, var(--paper));
+  color: var(--lingon);
+}
+.status-pill[data-status="pending"] {
+  background: var(--mist);
+  color: var(--muted);
+}
 .status-select:disabled {
   opacity: 0.6;
 }
