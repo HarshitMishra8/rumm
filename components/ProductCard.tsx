@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { useRef, useState } from "react";
 import { ProductArt } from "@/components/ProductArt";
+import { HeartButton } from "@/components/HeartButton";
+import { Stars } from "@/components/Stars";
 import { useCart } from "@/components/CartProvider";
 import { formatINR } from "@/lib/pricing";
 import type { Product } from "@/lib/types";
@@ -16,10 +18,13 @@ export function ProductCard({ product, size = "md" }: { product: Product; size?:
 
   return (
     <article className={`card card-${size}`}>
-      <Link href={href} className="card-art" ref={artRef} aria-label={`${product.name} ${product.type}`}>
-        <ProductArt kind={product.art} color={cw.hex} wood={product.wood} />
-        {product.badge && <span className={`badge badge-${product.badge === "Lower price" ? "sale" : "plain"}`}>{product.badge}</span>}
-      </Link>
+      <div className="card-media">
+        <Link href={href} className="card-art" ref={artRef} aria-label={`${product.name} ${product.type}`}>
+          <ProductArt kind={product.art} color={cw.hex} wood={product.wood} />
+          {product.badge && <span className={`badge badge-${product.badge === "Lower price" ? "sale" : "plain"}`}>{product.badge}</span>}
+        </Link>
+        <HeartButton productId={product.id} name={product.name} />
+      </div>
       <div className="card-body">
         <div className="card-title">
           <h3>
@@ -27,6 +32,14 @@ export function ProductCard({ product, size = "md" }: { product: Product; size?:
           </h3>
           <p>{product.type}</p>
         </div>
+        {product.rating && (
+          <p className="card-rating">
+            <Stars value={product.rating.avg} size={12} />
+            <span>
+              {product.rating.avg.toFixed(1)} ({product.rating.count})
+            </span>
+          </p>
+        )}
         <p className="card-price">
           <span className={`price ${product.wasPrice ? "price-sale" : ""}`}>{formatINR(product.price)}</span>
           {product.wasPrice && <s>{formatINR(product.wasPrice)}</s>}

@@ -2,6 +2,8 @@
 
 import { useRef, useState } from "react";
 import { ProductArt } from "@/components/ProductArt";
+import { HeartButton } from "@/components/HeartButton";
+import { Stars } from "@/components/Stars";
 import { useCart } from "@/components/CartProvider";
 import { deliveryDate, formatDay, formatINR } from "@/lib/pricing";
 import type { Product } from "@/lib/types";
@@ -25,6 +27,14 @@ export function ProductDetail({ product, initialColorway, stock }: { product: Pr
       <div className="pdp-info">
         <p className="pdp-type">{product.type}</p>
         <h1 className="pdp-name">{product.name}</h1>
+        {product.rating && (
+          <a href="#reviews" className="pdp-rating">
+            <Stars value={product.rating.avg} size={16} />
+            <span>
+              {product.rating.avg.toFixed(1)} from {product.rating.count} {product.rating.count === 1 ? "review" : "reviews"}
+            </span>
+          </a>
+        )}
         <p className="pdp-blurb">{product.blurb}</p>
 
         <p className="pdp-price">
@@ -79,6 +89,7 @@ export function ProductDetail({ product, initialColorway, stock }: { product: Pr
           >
             {soldOut ? "Out of stock" : adding ? "Adding…" : "Add to bag"}
           </button>
+          <HeartButton productId={product.id} name={product.name} size="lg" />
         </div>
 
         <dl className="pdp-facts">
