@@ -138,6 +138,7 @@ export function ChatWidget() {
     setBusy(true);
     try {
       const res = await fetch("/api/chat", {
+        signal: AbortSignal.timeout(90_000),
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -152,7 +153,12 @@ export function ChatWidget() {
         notify("Added to your bag");
       }
     } catch (err) {
-      setMessages((m) => [...m, { id: seq++, role: "assistant", text: (err as Error).message, error: true }]);
+      const e = err as Error;
+      const text =
+        e.name === "TimeoutError" || e.name === "AbortError"
+          ? "That took too long, so I stopped waiting. Try again, or ask a shorter question."
+          : e.message;
+      setMessages((m) => [...m, { id: seq++, role: "assistant", text, error: true }]);
     } finally {
       setBusy(false);
     }
