@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getOrder } from "@/lib/store";
 import { currentUser, recentOrderIds } from "@/lib/session";
+import { isAdmin } from "@/lib/admin";
 import { formatDay, formatINR } from "@/lib/pricing";
 
 export const metadata: Metadata = { title: "Your order" };
@@ -14,8 +15,8 @@ const STEP_LABEL = { placed: "Order placed", packed: "Packed", shipped: "On the 
 export default async function OrderPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const [order, user, recent] = await Promise.all([getOrder(id), currentUser(), recentOrderIds()]);
-  // only the customer who placed it (signed in, or on this browser) can see an order
-  if (!order || !((user && order.userId === user.id) || recent.includes(order.id))) notFound();
+  // only the customer who placed it (signed in, or on this browser) or an admin can see an order
+  if (!order || !((user && order.userId === user.id) || recent.includes(order.id) || isAdmin(user))) notFound();
   const stepIndex = STEPS.indexOf(order.status);
 
   return (

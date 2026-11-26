@@ -6,7 +6,7 @@ import { useCart } from "@/components/CartProvider";
 import { CartDrawer } from "@/components/CartDrawer";
 import { ROOMS } from "@/data/products";
 
-export function Header({ userName }: { userName: string | null }) {
+export function Header({ userName, isAdmin = false }: { userName: string | null; isAdmin?: boolean }) {
   const { cart, setOpen, ready } = useCart();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -40,6 +40,11 @@ export function Header({ userName }: { userName: string | null }) {
           </form>
 
           <nav className="tools" aria-label="Account and bag">
+            {isAdmin && (
+              <Link href="/admin" className="tool-link tool-admin">
+                Admin
+              </Link>
+            )}
             <Link href="/account" className="tool-link">
               <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
                 <circle cx="12" cy="8.5" r="3.8" fill="none" stroke="currentColor" strokeWidth="1.7" />

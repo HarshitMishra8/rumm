@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { CartProvider } from "@/components/CartProvider";
 import { Header } from "@/components/Header";
 import { currentUser } from "@/lib/session";
+import { isAdmin } from "@/lib/admin";
 import { Footer } from "@/components/Footer";
 import "./globals.css";
 
@@ -23,7 +24,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       <body>
         <CartProvider>
           <Suspense fallback={<div className="site-header" />}>
-            <Header userName={user?.name ?? null} />
+            <Header userName={user?.name ?? null} isAdmin={isAdmin(user)} />
           </Suspense>
           <main id="main">{children}</main>
           <Footer />
