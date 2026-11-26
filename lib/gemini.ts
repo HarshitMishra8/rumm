@@ -32,13 +32,18 @@ export interface FunctionDeclaration {
 
 export class GeminiError extends Error {}
 
+/** One Gemini call may take this long before we give up (override with GEMINI_TIMEOUT_MS). */
+const TIMEOUT_MS = Number(process.env.GEMINI_TIMEOUT_MS) || 30_000;
+
 export async function generate(input: {
   system: string;
   contents: GeminiContent[];
   functions: FunctionDeclaration[];
 }): Promise<GeminiContent | null> {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(geminiModel())}:generateContent`;
-  const res = await fetch(url, {
+  let res: Response;
+  try {
+    res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json", "x-goog-api-key": process.env.GEMINI_API_KEY ?? "" },
     body: JSON.stringify({
@@ -48,7 +53,15 @@ export async function generate(input: {
       generationConfig: { temperature: 0.4, maxOutputTokens: 1024 },
     }),
     cache: "no-store",
+    signal: AbortSignal.timeout(TIMEOUT_MS),
   });
+  } catch (err) {
+    const name = (err as Error)?.name;
+    if (name === "TimeoutError" || name === "AbortError") {
+      throw new GeminiError(`Gemini didn't answer within ${TIMEOUT_MS / 1000}s`);
+    }
+    throw new GeminiError(`Couldn't reach Gemini: ${(err as Error)?.message ?? err}`);
+  }
   const data = (await res.json().catch(() => ({}))) as {
     candidates?: { content?: GeminiContent; finishReason?: string }[];
     error?: { message?: string };
