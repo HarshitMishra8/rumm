@@ -7,7 +7,7 @@ export function geminiEnabled(): boolean {
 }
 
 /** Tried in order when a model is busy or unavailable. */
-const DEFAULT_MODELS = ["gemini-flash-latest", "gemini-2.5-flash", "gemini-2.5-flash-lite"];
+const DEFAULT_MODELS = ["gemini-flash-latest", "gemini-3.8-flash", "gemini-3.5-flash-lite"];
 
 /**
  * Models to try, best first. GEMINI_MODEL can name one model or a
@@ -97,9 +97,13 @@ export async function generate(
   input: { system: string; contents: GeminiContent[]; functions: FunctionDeclaration[] },
   preferred?: string,
 ): Promise<{ content: GeminiContent | null; model: string }> {
-  const models = preferred ? [preferred, ...geminiModels().filter((m) => m !== preferred)] : geminiModels();
+  const queue = preferred ? [preferred, ...geminiModels().filter((m) => m !== preferred)] : geminiModels();
+  const tried = new Set<string>();
   let last: unknown;
-  for (const model of models) {
+  while (queue.length) {
+    const model = queue.shift()!;
+    if (tried.has(model)) continue;
+    tried.add(model);
     // a busy model often frees up within a second, so give it one more go
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
@@ -109,6 +113,11 @@ export async function generate(
         const status = err instanceof GeminiError ? err.status : 0;
         if (!TRY_ANOTHER.has(status)) throw err; // bad key, bad request, timeout, offline: another model won't help
         console.warn(`[chat] ${(err as Error).message}`);
+        if (status === 404) {
+          // Google names the replacement when it retires a model ("...use models/gemini-x-flash..."): try that next
+          const suggested = (err as Error).message.match(/models\/(gemini-[\w.-]+)/g)?.map((m) => m.replace("models/", ""));
+          for (const m of suggested ?? []) if (!tried.has(m)) queue.unshift(m);
+        }
         if (status === 503 && attempt === 0) {
           await sleep(800);
           continue;
