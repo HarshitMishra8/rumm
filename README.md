@@ -85,7 +85,7 @@ Set `GEMINI_API_KEY` (free from [Google AI Studio](https://aistudio.google.com/a
 - It can suggest products within a budget, add them to the bag in the right colour, and tell signed-in customers (or guests, for orders placed in this browser) where their order is. It can't place orders or take payment.
 - Replies link to product pages, and recommended products appear as small cards with an Add button.
 - `POST /api/chat` takes the last 20 messages (1,000 characters each) and allows 15 messages a minute per visitor.
-- Models are tried in order (`gemini-flash-latest`, `gemini-2.5-flash`, `gemini-2.5-flash-lite`): a busy model (503) gets one quick retry, then the next one is used. `GEMINI_MODEL` puts your choice first. Each Gemini call stops after 30 seconds, and the terminal logs which model answered and how long it took.
+- Models are tried in order (`gemini-flash-latest`, `gemini-3.8-flash`, `gemini-3.5-flash-lite`): a busy model (503) gets one quick retry, then the next one is used. When Google retires a model, its 404 message names the replacement, and that model is tried next. `GEMINI_MODEL` puts your choice first. Each Gemini call stops after 30 seconds, and the terminal logs which model answered and how long it took.
 
 ## Design notes
 
