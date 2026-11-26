@@ -52,7 +52,13 @@ export default async function AccountPage() {
               <Link href={`/orders/${o.id}`} className="order-row">
                 <span className="order-id">{o.id}</span>
                 <span>{o.lines.reduce((n, l) => n + l.qty, 0)} items</span>
-                <span>Arrives by {formatDay(o.deliverBy)}</span>
+                <span>
+                  {o.status === "cancelled"
+                    ? "Cancelled"
+                    : o.paymentStatus === "pending"
+                      ? "Waiting for payment"
+                      : `Arrives by ${formatDay(o.deliverBy)}`}
+                </span>
                 <span className="price">{formatINR(o.total)}</span>
               </Link>
             </li>
