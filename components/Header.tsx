@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useCart } from "@/components/CartProvider";
+import { useWishlist } from "@/components/WishlistProvider";
 import { CartDrawer } from "@/components/CartDrawer";
 import { ROOMS } from "@/data/products";
 
 export function Header({ userName, isAdmin = false }: { userName: string | null; isAdmin?: boolean }) {
   const { cart, setOpen, ready } = useCart();
+  const { ids: saved } = useWishlist();
   const pathname = usePathname();
   const params = useSearchParams();
   const activeRoom = pathname === "/shop" ? params.get("room") : null;
@@ -45,6 +47,18 @@ export function Header({ userName, isAdmin = false }: { userName: string | null;
                 Admin
               </Link>
             )}
+            <Link href="/saved" className="tool-link tool-saved" aria-label={`Saved items, ${saved.size}`}>
+              <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+                <path
+                  d="M12 19.5s-7.2-4.4-9.3-8.6C1.2 7.9 3 4.5 6.4 4.5c2.1 0 3.5 1.2 4.3 2.5h2.6c.8-1.3 2.2-2.5 4.3-2.5 3.4 0 5.2 3.4 3.7 6.4-2.1 4.2-9.3 8.6-9.3 8.6z"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.7"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              {saved.size > 0 && <span className="saved-count">{saved.size}</span>}
+            </Link>
             <Link href="/account" className="tool-link">
               <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
                 <circle cx="12" cy="8.5" r="3.8" fill="none" stroke="currentColor" strokeWidth="1.7" />
