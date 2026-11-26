@@ -10,12 +10,12 @@ You need a MongoDB database. A free [MongoDB Atlas](https://www.mongodb.com/atla
 
 ```bash
 npm install
-cp .env.example .env.local    # paste your Atlas connection string into .env.local
-npm run db:seed               # adds stock for every product and builds the indexes
+cp .env.example .env.local    # paste your Atlas connection string and your admin email
+npm run db:seed               # adds the starter products and stock, builds the indexes
 npm run dev                   # http://localhost:3000
 ```
 
-`npm run db:seed` never resets stock that already exists, so it's safe to run again after adding products.
+`npm run db:seed` never overwrites products or stock that already exist, so it's safe to run again.
 
 ## What's in it
 
@@ -41,10 +41,20 @@ npm run dev                   # http://localhost:3000
 
 - Passwords are hashed with scrypt and compared in constant time. Sessions use random 256-bit tokens in httpOnly cookies.
 - Guests can check out. An order page is visible only to the account that placed it, or to the browser that placed it.
-- Data lives in MongoDB. Mongoose models are in `models/`; routes import from `lib/store.ts`, which re-exports the users, cart and orders modules.
+- Data lives in MongoDB, products included. Mongoose models are in `models/`; routes import from `lib/store.ts`, which re-exports the users, cart and orders modules.
 - Placing an order runs in a MongoDB transaction. Stock is taken with a conditional update, so two customers can never both buy the last one.
 - Bag updates check the document version, so two quick taps on "Add" both count.
 - Sessions and abandoned bags expire on their own through TTL indexes.
+
+## Admin panel
+
+Put your email in `ADMIN_EMAILS` in `.env.local` (comma-separate several), create an account on the site with that email, and an **Admin** link appears in the header.
+
+- **Overview** (`/admin`): orders and sales for the last 7 days, orders waiting to ship, products running low.
+- **Products** (`/admin/products`): add and edit products with a live preview. Pick an illustration, set colours, price, was-price, badge, stock, size and description. Hiding a product removes it from the shop and from bags; past orders keep their copy.
+- **Orders** (`/admin/orders`): filter by status and move orders along (placed → packed → on the way → delivered). Customers see the change on their order tracker.
+
+Customers who open `/admin` get a 404, and the admin API answers 403.
 
 ## Design notes
 
@@ -56,7 +66,7 @@ npm run dev                   # http://localhost:3000
 ## Deploying to Vercel
 
 1. In Atlas, open **Network Access** and allow `0.0.0.0/0` (Vercel's servers don't have fixed addresses).
-2. Import the GitHub repo in Vercel and add `MONGODB_URI` under **Settings → Environment Variables**.
+2. Import the GitHub repo in Vercel and add `MONGODB_URI` and `ADMIN_EMAILS` under **Settings → Environment Variables**.
 3. Deploy, then run `npm run db:seed` once from your machine if the database is new.
 
 Transactions need a replica set. Atlas clusters (including the free one) are replica sets; a plain local `mongod` is not.
